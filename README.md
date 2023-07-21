@@ -18,6 +18,13 @@ server-health-monitoring/
 |-- README.md
 ```
 
+## Requirements
+
+To run the Server Health Monitoring Application, you will need the following tools and technologies installed on your system:
+
+1. [Docker](https://www.docker.com/get-started) - For containerization of microservices.
+2. [Docker Compose](https://docs.docker.com/compose/install/) - To define and manage multi-container Docker applications.
+
 ## Installation
 
 To run the Server Health Monitoring Application locally, make sure you have Docker and Docker Compose installed on your system. Then, follow these steps:
@@ -46,6 +53,10 @@ docker-compose up -d
 
 ![Screenshot 1](screenshots/screenshot1.png)
 ![Screenshot 2](screenshots/screenshot2.png)
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
 
 ## Author
 
