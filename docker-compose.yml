@@ -1,0 +1,53 @@
+version: "3"
+services:
+  mongodb:
+    image: mongo
+    restart: always
+    networks:
+      - my-network
+    volumes:
+      - mongodb_data:/data/db
+
+  server:
+    build:
+      context: ./server
+    depends_on:
+      - mongodb
+    expose:
+      - ${PORT}
+    ports:
+      - 9876:${PORT}
+    networks:
+      - my-network
+    volumes:
+      - ./server/config/mongodb-url.txt:/app/config/mongodb-url.txt:ro
+    environment:
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
+      - MONGO_DB_URL=${MONGO_DB_URL}
+      - API_INTERVAL=${API_INTERVAL}
+      - SQL_INTERVAL=${SQL_INTERVAL}
+
+  client:
+    build:
+      context: ./client
+    depends_on:
+      - server
+    ports:
+      - 1234:3000
+    expose:
+      - 3000
+    links:
+      - server
+    networks:
+      - my-network
+    environment:
+      - REACT_APP_ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
