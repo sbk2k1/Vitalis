@@ -4,6 +4,7 @@
 // userLoginService
 
 const User = require('../models/user');
+const bcrypt = require('bcrypt');
 
 
 const createUserService = async (params) => {
@@ -14,9 +15,16 @@ const createUserService = async (params) => {
    password: params.password,
   });
   const newUser = await user.save();
-  return newUser;
+  return {
+   created: true,
+   message: "user created",
+   user: newUser,
+  };
  } catch (err) {
-  return err;
+  return {
+   created: false,
+   message: err.message,
+  };
  }
 }
 
@@ -25,16 +33,34 @@ const userLoginService = async (params) => {
  try {
   const user = await User.findOne({ username: params.username });
   if (!user) {
-   return "user not found";
+   return {
+    login: false,
+    message: "user not found",
+   };
   }
+
+  // hash the password
+
+  const hashed_password = await bcrypt.hash(params.password, 10);
+
   // if user exists, check if password matches
-  const isMatch = await bcrypt.compare(params.password, user.password);
+  const isMatch = await bcrypt.compare(params.password, hashed_password);
   if (!isMatch) {
-   return "wrong password";
+   return {
+    login: false,
+    message: "password does not match",
+   };
   }
-  return user;
+  return {
+   login: true,
+   message: "login successful",
+   user: user,
+  };
  } catch (err) {
-  return err;
+  return {
+   login: false,
+   message: err.message,
+  };
  }
 }
 

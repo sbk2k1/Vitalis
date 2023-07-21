@@ -1,6 +1,7 @@
 const { WorkspaceApi } = require('../models/workspace');
 const { ConnectionApi } = require('../models/connection');
 const { mongoose } = require('mongoose');
+const apiServices = require('../services/db/api');
 
 // Add API Controllers here
 
@@ -18,10 +19,16 @@ const { mongoose } = require('mongoose');
 
 const getWorkspaces = async (req, res) => {
     try {
-        const workspaces = await WorkspaceApi.find({ user: req.user.username });
-        res.status(200).json(workspaces);
+        const workspaces = apiServices.getApiWorkspacesService({ user: req.user.username });
+        res.status(200).json({
+            error: false,
+            workspaces
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
@@ -29,10 +36,26 @@ const getWorkspaces = async (req, res) => {
 
 const getWorkspaceByName = async (req, res) => {
     try {
-        const workspace = await WorkspaceApi.findOne({ name: req.params.name, user: req.user.username });
-        res.status(200).json(workspace);
+        const workspace = await apiServices.getApiWorkspacesService({ name: req.params.name, user: req.user.username });
+
+        // if length is 0, workspace does not exist
+        if (workspace.length === 0) {
+            return res.status(400).json({
+                error: true,
+                message: "Workspace does not exist"
+            });
+        }
+
+        res.status(200).json({
+            error: false,
+            workspace: workspace[0]
+        });
+
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
@@ -40,14 +63,27 @@ const getWorkspaceByName = async (req, res) => {
 
 const createWorkspace = async (req, res) => {
     try {
-        const workspace = new WorkspaceApi({
+        const workspace = {
             name: req.body.name,
             user: req.user.username
+        }
+        const newWorkspace = await apiServices.createApiWorkspaceService(workspace);
+        if (!newWorkspace.created) {
+            return res.status(400).json({
+                error: true,
+                message: "Workspace already exists"
+            });
+        }
+        res.status(201).json({
+            error: false,
+            workspace: newWorkspace.workspace
         });
-        const newWorkspace = await workspace.save();
-        res.status(201).json(newWorkspace);
+
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(400).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
@@ -58,9 +94,18 @@ const createWorkspace = async (req, res) => {
 const getConnections = async (req, res) => {
     // path params
     try {
-        var workspace = await WorkspaceApi.findOne({ name: req.params.workspace });
-        var workspaceId = workspace._id;
-        const connections = await ConnectionApi.find({ workspace: workspaceId });
+
+        const workspaceParam = { name: req.params.workspace };
+
+        const connections = await apiServices.getApiConnectionsService(workspaceParam);
+
+        if (!connections.found) {
+            return res.status(400).json({
+                error: true,
+                message: connections.error
+            });
+        }
+
         res.status(200).json(connections);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -71,36 +116,26 @@ const getConnections = async (req, res) => {
 
 const createConnection = async (req, res) => {
     try {
-
-        
-
         // take care of %20 in workspace name
-        var workspace = req.params.workspace;
+        var params = { workspace: req.params.workspace, connection: req.body, user: req.user.username };
+        const connection = await apiServices.createApiConnectionService(params);
 
-        workspace = await WorkspaceApi.findOne({ name: workspace });
-        var workspaceId = workspace._id;
-
-        const exists = await ConnectionApi.findOne({
-            workspace: new mongoose.Types.ObjectId(workspaceId),
-            url: req.body.url,
-            requestType: req.body.requestType,
-        });
-
-        if (exists) {
-            return res.status(400).json({ message: "Connection already exists" });
+        if (!connection.created) {
+            return res.status(400).json({
+                error: true,
+                message: connection.error
+            });
         }
 
-        const connection = new ConnectionApi({
-            url: req.body.url,
-            requestType: req.body.requestType,
-            workspace: workspaceId,
-            threshold: Number(req.body.threshold),
-            numOfTimes: Number(req.body.numOfTimes),
+        res.status(201).json({
+            error: false,
+            connection: connection.connection
         });
-        const newConnection = await connection.save();
-        res.status(201).json(newConnection);
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(400).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
@@ -108,28 +143,27 @@ const createConnection = async (req, res) => {
 
 const deleteConnection = async (req, res) => {
 
-    console.log("here");
 
     try {
-        const workspace = await WorkspaceApi.findOne({ name: req.params.workspace });
-        const workspaceId = workspace._id;
+        const params = { workspace: req.params.workspace, user: req.user.username, url: req.query.url, requestType: req.query.method };
+        const connection = await apiServices.deleteApiConnectionService(params);
 
-        const connection = await ConnectionApi.findOne({
-            workspace: new mongoose.Types.ObjectId(workspaceId),
-            url: req.query.url,
-            requestType: req.query.method,
-        });
-
-        if (!connection) {
-            return res.status(400).json({ message: "Connection does not exist" });
+        if (!connection.deleted) {
+            return res.status(400).json({
+                error: true,
+                message: connection.error
+            });
         }
 
-        await connection.deleteOne();
-
-        res.status(200).json({ message: "Connection deleted" });
-
+        res.status(200).json({
+            error: false,
+            message: "Connection deleted"
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
@@ -137,23 +171,26 @@ const deleteConnection = async (req, res) => {
 
 const deleteWorkspace = async (req, res) => {
     try {
-        var workspace = await WorkspaceApi.findOne({ name: req.params.name });
-        workspace = workspace._id;
+        const params = { workspace: req.params.workspace, user: req.user.username };
+        const workspace = await apiServices.deleteApiWorkspaceService(params);
 
-        // if there are connections in the workspace donot delete
-
-        const connections = await ConnectionApi.find({ workspace: workspace });
-
-        if (connections.length > 0) {
-            return res.status(400).json({ message: "Workspace has connections" });
+        if (!workspace.deleted) {
+            return res.status(400).json({
+                error: true,
+                message: workspace.error
+            });
         }
 
-        await WorkspaceApi.deleteOne({ _id: workspace });
-
-        res.status(200).json({ message: "Workspace deleted" });
-
+        res.status(200).json({
+            error: false,
+            message: "Workspace deleted"
+        });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+
+        res.status(500).json({
+            error: true,
+            message: err.message
+        });
     }
 };
 
