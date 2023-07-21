@@ -2,6 +2,8 @@ const User = require('../models/user');
 const createToken = require('../services/crypto').createToken;
 const bcrypt = require('bcrypt');
 
+// function register - service required = createUserService
+
 const register = async (req, res) => {
     try {
         console.log("request received")
@@ -24,6 +26,8 @@ const register = async (req, res) => {
         return res.status(400).json({ message: err });
     }
 }
+
+// function login - service required = userLoginService
 
 const login = async (req, res) => {
     console.log("login request received")

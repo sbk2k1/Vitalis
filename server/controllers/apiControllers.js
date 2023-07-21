@@ -1,6 +1,6 @@
 const { WorkspaceApi } = require('../models/workspace');
 const { ConnectionApi } = require('../models/connection');
-const { default: mongoose } = require('mongoose');
+const { mongoose } = require('mongoose');
 
 // Add API Controllers here
 
@@ -13,7 +13,8 @@ const { default: mongoose } = require('mongoose');
 // get all connections
 // create connection
 
-// workspace controllers
+
+// function getWorkspaces()  - service needed  = getApiWorkspacesService
 
 const getWorkspaces = async (req, res) => {
     try {
@@ -24,6 +25,8 @@ const getWorkspaces = async (req, res) => {
     }
 };
 
+// function getWorkspaceByName(name) - service needed = getApiWorkspacesService
+
 const getWorkspaceByName = async (req, res) => {
     try {
         const workspace = await WorkspaceApi.findOne({ name: req.params.name, user: req.user.username });
@@ -32,6 +35,8 @@ const getWorkspaceByName = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// function createWorkspace(name) - service needed = createApiWorkspaceService
 
 const createWorkspace = async (req, res) => {
     try {
@@ -48,6 +53,8 @@ const createWorkspace = async (req, res) => {
 
 // connection controllers
 
+// function getConnections(workspace) - service needed = getApiConnectionsService
+
 const getConnections = async (req, res) => {
     // path params
     try {
@@ -59,6 +66,8 @@ const getConnections = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// function createConnection(workspace, url, method, threshold, numOfTimes) - service needed = createApiConnectionService
 
 const createConnection = async (req, res) => {
     try {
@@ -95,6 +104,8 @@ const createConnection = async (req, res) => {
     }
 };
 
+// function deleteConnection(workspace, url, method) - service needed = deleteApiConnectionService
+
 const deleteConnection = async (req, res) => {
 
     console.log("here");
@@ -121,6 +132,8 @@ const deleteConnection = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+// function deleteWorkspace(workspace) - service needed = deleteApiWorkspaceService
 
 const deleteWorkspace = async (req, res) => {
     try {
