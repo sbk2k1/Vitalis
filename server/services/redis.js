@@ -1,8 +1,5 @@
 var redis = require('redis');
-var client = redis.createClient({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT
-});
+var client = redis.createClient({url: process.env.REDIS_URL});
 
 client.on('connect', function () {
     console.log('Redis Database connected' + '\n');

@@ -40,8 +40,7 @@ export default function Api(props) {
     getConnections();
 
     const interval = setInterval(() => {
-      if(connections.length > 0)
-      populateActive();
+        populateActive();
     }, 5000);
 
     return () => {
@@ -55,6 +54,11 @@ export default function Api(props) {
 
   const populateActive = async () => {
     try {
+      if(!active.current) {
+        // clear graph
+        setGraphLoad((graphLoad) => !graphLoad);
+        return;
+      }
       const res = await onGetData("api/connections/populate/" + active.current.uniqueId);
       if(!res.error){
         if(res.data.data){
@@ -200,10 +204,13 @@ export default function Api(props) {
           connections.filter((connection) => connection.url !== url),
         );
         // send a request to get data for the first connection in the connections array
-        console.log("here")
+        console.log(connections.length)
         
-        if(connections.length > 0)
+        if(connections.length > 1)
         active.current = connections[0];
+
+        if(connections.length == 1)
+        window.location.reload();
 
         setGraphLoad((graphLoad) => !graphLoad);
 
@@ -456,7 +463,7 @@ export default function Api(props) {
             </>
           )}
 
-          {!loading && (
+          {!loading && (connections.length != 0) && (
             <div className="delete-connections">
               <div className="delete-connection">
                 {connections &&
