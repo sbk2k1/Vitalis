@@ -70,15 +70,19 @@ app.use((req, res) => {
 });
 // ------------------ Cluster ------------------
 
-const numCPUs = require("os").cpus().length;
+// const numCPUs = require("os").cpus().length;
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`);
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-} else {
-  app.listen(process.env.PORT, () => {
-    console.log(`Server ${process.pid} is running on port ${process.env.PORT}`);
-  });
-}
+// if (cluster.isMaster) {
+//   console.log(`Master ${process.pid} is running`);
+//   for (let i = 0; i < numCPUs; i++) {
+//     cluster.fork();
+//   }
+// } else {
+//   app.listen(process.env.PORT, () => {
+//     console.log(`Server ${process.pid} is running on port ${process.env.PORT}`);
+//   });
+// }
+
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on port ${process.env.PORT}`);
+});

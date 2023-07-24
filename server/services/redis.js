@@ -27,6 +27,8 @@ client.on('end', function() {
     process.exit();
 });
 
+client.connect();
+
 module.exports.set = (key, value) => {
   client.set(key, value, redis.print);
   return 'done';

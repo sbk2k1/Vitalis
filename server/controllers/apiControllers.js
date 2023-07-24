@@ -119,6 +119,7 @@ const getConnections = async (req, res) => {
 
 const populateConnection = async (req, res) => {
     try {
+        console.log(req.params.name);
         // get uniqueId from params
         const uniqueId = req.params.name;
         // get data from redis 
@@ -144,9 +145,6 @@ const populateConnection = async (req, res) => {
         });
     }
 }
-
-
-
 
 // function createConnection(workspace, url, method, threshold, numOfTimes) - service needed = createApiConnectionService
 
