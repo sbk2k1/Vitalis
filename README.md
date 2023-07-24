@@ -1,6 +1,6 @@
 # Server Health Monitoring Application
 
-![App Screenshot](screenshots/screenshot.png)
+![App Screenshot](screenshots/homescreen.png)
 
 ## About
 
@@ -46,13 +46,12 @@ docker-compose up -d
 ```
 
 3. The application will be available at:
-   - Frontend (React) - http://localhost:3000
-   - Backend (Node.js) - http://localhost:5000
+   - Frontend (React) - http://localhost:1234
 
 ## Screenshots
 
-![Screenshot 1](screenshots/screenshot1.png)
-![Screenshot 2](screenshots/screenshot2.png)
+![Screenshot 1](screenshots/workspace.png)
+![Screenshot 2](screenshots/dashboard.png)
 
 ## License
 
