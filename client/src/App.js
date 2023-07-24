@@ -30,25 +30,8 @@ export default function App() {
           />
           <Route
             exact
-            path="/workspaces/sql"
-            component={loadable(() => import("./pages/workspace/sql/sql"))}
-          />
-          <Route
-            exact
-            path="/workspaces"
-            component={loadable(() =>
-              import("./pages/workspace/select/select"),
-            )}
-          />
-          <Route
-            exact
             path="/dashboard/api/:name"
             component={loadable(() => import("./pages/dashboard/api/api"))}
-          />
-          <Route
-            exact
-            path="/dashboard/sql/:name"
-            component={loadable(() => import("./pages/dashboard/sql/sql"))}
           />
           <Route
             exact

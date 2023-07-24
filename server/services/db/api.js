@@ -1,6 +1,7 @@
 const WorkspaceApi = require('../../models/workspace');
 const ConnectionApi = require('../../models/connection');
 const { mongoose } = require('mongoose');
+const uuid = require('uuid');
 
 // services
 
@@ -13,7 +14,7 @@ const { mongoose } = require('mongoose');
 
 const getApiWorkspacesService = async (params) => {
     try {
-        const workspaces = await WorkspaceApi.find({ user: params });
+        const workspaces = await WorkspaceApi.find(params);
         return {
             found: true,
             workspaces
@@ -92,12 +93,8 @@ const createApiConnectionService = async (params) => {
             requestType: connectionBody.requestType,
             workspace: workspace._id,
             threshold: connectionBody.threshold,
-            status: connectionBody.status,
-            times: connectionBody.times,
-            statusCode: connectionBody.statusCode,
-            responseSize: connectionBody.responseSize,
-            lastChecked: connectionBody.lastChecked,
-            numOfTimes: connectionBody.numOfTimes
+            numOfTimes: connectionBody.numOfTimes,
+            uniqueId: uuid.v4()
         });
 
         const newConnection = await connection.save();
@@ -127,7 +124,7 @@ const deleteApiConnectionService = async (params) => {
         }
         // check if connection exists
         const connection = await ConnectionApi.findOne({
-            workspace: new mongoose.Types.ObjectID(workspace._id), 
+            workspace: new mongoose.Types.ObjectId(workspace._id), 
             url: params.url, requestType: 
             params.requestType
         });

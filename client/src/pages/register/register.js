@@ -33,13 +33,13 @@ export default function Register() {
       }
     } catch (err) {
       console.log(err);
-      createNotification("error", "Username already exists!", "Error");
+      createNotification("error", err.message, "Error");
     }
   };
 
   // redirect to home if logged in
   if (redirect) {
-    return <Redirect to="/workspaces" />;
+    return <Redirect to="/" />;
   }
 
   return (

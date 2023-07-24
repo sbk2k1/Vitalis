@@ -21,6 +21,7 @@ export default function Api(props) {
   const [threshold, setThreshold] = useState(null);
   const [page, setPage] = useState("dashboard");
   const [numOfTimes, setNumOfTimes] = useState(null);
+  const [graphLoad, setGraphLoad] = useState(false);
 
   // loader
   const [loading, setLoading] = useState(true);
@@ -35,54 +36,64 @@ export default function Api(props) {
       createNotification("error", "Please Login First", "Error");
       setLogout(true);
     }
+
     getConnections();
 
     const interval = setInterval(() => {
-      getConnections();
-    }, 1000);
+      populateActive();
+    }, 5000);
 
     return () => {
       clearInterval(interval);
     };
   }, []);
 
+  // get data for only active connection using the endpoint /api/connections/populate/:uniqueId
+
+
+
+  const populateActive = async () => {
+    try {
+      const res = await onGetData("api/connections/populate/" + active.current.uniqueId);
+      if(!res.error){
+        if(res.data.data){
+        active.current.times = res.data.data.responseTimes;
+        active.current.statusCode = res.data.data.statusCode;
+        active.current.status = res.data.data.status;
+        active.current.lastCheckedTime = res.data.data.lastCheckedTime;
+        } else {
+          active.current.times = [];
+          active.current.statusCode = null;
+          active.current.status = null;
+          active.current.lastCheckedTime = null;
+        }
+        setGraphLoad((graphLoad) => !graphLoad)
+      } else {
+        // create a notification
+        createNotification("error", res.data.message, "Error");
+      }
+    } catch (err) {
+      // create a notification
+      createNotification("error", err.message, "Error");
+    }
+  };
+
   const getConnections = async () => {
     try {
       const res = await onGetData("api/connections/" + props.match.params.name);
-
-      // here active state is reset to null on each interval because of the way useEffect works
-      // to prevent this, we can use a useRef hook
-
-      if (res.status === 200) {
-        if (res.data.length === 0) {
+      
+      if(res.data.found){
+        if(res.data.connections.length == 0){
+          setLoading(false);
           setConnections(null);
         } else {
-          setConnections(res.data);
+          setLoading(false);
+          setConnections(res.data.connections);
+          active.current = res.data.connections[0];
+          populateActive();
         }
-        if (active.current === null) {
-          active.current = res.data[0];
-        } else {
-          // if active connection is not null, check if it is in the new connections array
-          // if it is, set active to that connection
-          // else set active to the first connection in the array
-          if (
-            res.data.some((connection) => connection.url === active.current.url)
-          ) {
-            active.current = res.data.find(
-              (connection) => connection.url === active.current.url,
-            );
-          } else {
-            active.current = res.data[0];
-          }
-        }
-        setLoading(false);
-      } else if (res.status === 400) {
-        createNotification("Connection Already exists");
-        // refresh page
-        window.location.reload();
-      } else {
-        createNotification("error", res.data);
       }
+
     } catch (err) {
       if (err.response && err.response.status === 401) {
         removeData();
@@ -163,6 +174,9 @@ export default function Api(props) {
         .classList.remove("active-button");
     }
 
+    // also fire a request to get data for the active connection
+    populateActive();
+
     // add active-button class to clicked button
     event.target.classList.add("active-button");
   };
@@ -184,6 +198,14 @@ export default function Api(props) {
         setConnections((connections) =>
           connections.filter((connection) => connection.url !== url),
         );
+        // send a request to get data for the first connection in the connections array
+        console.log("here")
+        
+        if(connections.length > 0)
+        active.current = connections[0];
+
+        setGraphLoad((graphLoad) => !graphLoad);
+
       } else {
         createNotification("error", res.data);
       }
@@ -268,7 +290,7 @@ export default function Api(props) {
                     </button>
                   ))}
               </div>
-              {active.current && (
+              {(graphLoad || !graphLoad) && active.current && (
                 <div className="data">
                   <div className="graph">
                     {active.current.times && (
@@ -277,19 +299,17 @@ export default function Api(props) {
                           labels: [
                             // get numOfTimes and create labels counting down from numOfTimes to 0
                             // if numOfTimes is 5, labels will be -4, -3, -2, -1, 0
-                            ...Array(active.current.numOfTimes)
+                            ...Array(active.current.numOfTimes>active.current.times.length?active.current.times.length:active.current.numOfTimes)
                               .fill()
                               .map(
                                 (_, index) =>
-                                  index - active.current.numOfTimes + 1,
+                                  index - (active.current.numOfTimes>active.current.times.length?active.current.times.length:active.current.numOfTimes) + 1,
                               ),
                           ],
                           datasets: [
                             {
                               label: active.current.url,
-                              data: active.current.times
-                                .split(",")
-                                .map((time) => parseInt(time)),
+                              data: active.current.times,
                               fill: false,
                               backgroundColor: "rgb(0, 99, 132)",
                               borderColor: "rgba(0, 99, 132, 0.3)",
@@ -324,9 +344,21 @@ export default function Api(props) {
                       />
                     )}
 
-                    {!active.current.times && (
-                      <p className="graph">No Connection Established</p>
-                    )}
+                  {/* loader for until graph is loaded */}
+
+                  {graphLoad && (
+                    <Dna
+                      visible={true}
+                      height="80"
+                      width="80"
+                      ariaLabel="dna-loading"
+                      wrapperStyle={{}}
+                      wrapperClass="dna-wrapper"
+                      className="graph"
+                    />
+                  )}
+
+          
                   </div>
                   <div className="details">
                     <h3>Graph For</h3>

@@ -29,23 +29,4 @@ client.on('end', function() {
 
 client.connect();
 
-module.exports.set = (key, value) => {
-  client.set(key, value, redis.print);
-  return 'done';
-}
-
-module.exports.get = (key) => {
-  return new Promise((resolve, reject) => {
-    client.get(key, function (error, result) {
-        if (error) {
-          console.log(error);
-          reject(error);
-        }
-        resolve(result);
-    });
-  });
-}
-
-module.exports.close = () => {
-  client.quit();
-}
+module.exports = client;

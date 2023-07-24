@@ -2,7 +2,6 @@ const { WorkspaceApi } = require('../models/workspace');
 const { ConnectionApi } = require('../models/connection');
 const { mongoose } = require('mongoose');
 const apiServices = require('../services/db/api');
-const uuid = require('uuid');
 const redisClient = require('../services/redis');
 
 // Add API Controllers here
@@ -20,11 +19,12 @@ const redisClient = require('../services/redis');
 // function getWorkspaces()  - service needed  = getApiWorkspacesService
 
 const getWorkspaces = async (req, res) => {
+
     try {
-        const workspaces = apiServices.getApiWorkspacesService({ user: req.user.username });
+        const workspaces = await apiServices.getApiWorkspacesService({ user: req.user.username });
         res.status(200).json({
             error: false,
-            workspaces
+            data: workspaces
         });
     } catch (err) {
         res.status(500).json({
@@ -40,7 +40,6 @@ const getWorkspaceByName = async (req, res) => {
     try {
 
         const workspace = await apiServices.getApiWorkspacesService({ name: req.params.name, user: req.user.username });
-
         // if length is 0, workspace does not exist
         if (workspace.length === 0) {
             return res.status(400).json({
@@ -119,16 +118,15 @@ const getConnections = async (req, res) => {
 
 const populateConnection = async (req, res) => {
     try {
-        console.log(req.params.name);
         // get uniqueId from params
         const uniqueId = req.params.name;
         // get data from redis 
         const data = await redisClient.get(uniqueId);
-        // if data is null, connection does not exist
+        // if data is null, connection still in progress
         if (!data) {
-            return res.status(400).json({
-                error: true,
-                message: "Connection does not exist"
+            return res.status(200).json({
+                error: false,
+                data: null
             });
         }
         // parse data
@@ -154,13 +152,10 @@ const createConnection = async (req, res) => {
 
         // create unique id
 
-        const uniqueId = uuid.v4();
-
         var params = { 
             workspace: req.params.workspace, 
-            uniqueId: uniqueId,
             connection: req.body, 
-            user: req.user.username 
+            user: req.user.username
         };
         const connection = await apiServices.createApiConnectionService(params);
 

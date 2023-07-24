@@ -1,11 +1,15 @@
 const User = require('../models/user');
 const createToken = require('../services/crypto').createToken;
 const userServices = require('../services/db/user');
+const bcrypt = require('bcrypt');
 
 // function register - service required = createUserService
 
 const register = async (req, res) => {
     try {
+
+        const hash_password = await bcrypt.hash(req.body.password, 10);
+
         const user = {
             name: req.body.name,
             username: req.body.username,
@@ -17,7 +21,7 @@ const register = async (req, res) => {
         if (!newUser.created) {
             return res.status(400).json({
                 error: true,
-                message: newUser.message
+                message: "User already exists!"
             });
         }
 
@@ -36,7 +40,7 @@ const register = async (req, res) => {
     } catch (err) {
         return res.status(400).json({
             error: true,
-            message: err
+            message: err.message
         });
     }
 }

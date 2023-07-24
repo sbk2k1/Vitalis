@@ -28,16 +28,16 @@ export default function Api() {
   const getWorkspaces = async () => {
     try {
       const res = await onGetData("api/workspaces");
-      if (res.status === 200) {
-        if (res.data.length === 0) {
-          createNotification("info", "You don't have any connections", "Info");
+      if (res.data.data.found) {
+        if (res.data.data.workspaces.length === 0) {
+          createNotification("info", "You don't have any workspaces", "Info");
           setWorkspaces(null);
         } else {
-          setWorkspaces(res.data);
+          setWorkspaces(res.data.data.workspaces);
           createNotification("success", "API Workspaces loaded", "Success");
         }
       } else {
-        alert(res.data.message);
+        createNotification("error", res.data.data.message, "Error");
       }
     } catch (err) {
       if (err.request) {

@@ -13,9 +13,11 @@ axios.interceptors.request.use(x => {
 schedule.scheduleJob(process.env.API_INTERVAL, async () => {
     const connections = await ConnectionApi.find({});
 
-    console.log(`Checking ${connections.length} connections`);
-
     connections.forEach(async connection => {
+        // Get connection threshold
+        const threshold = connection.threshold;
+        // Get numOfTimes
+        const numOfTimes = connection.numOfTimes;
         try {
             const response = await axios({
                 method: connection.connectionType,
@@ -25,10 +27,6 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
             // Get response time
             const responseTime = new Date().getTime() - response.config.meta.connectionStartedAt;
 
-            // Get connection threshold
-            const threshold = connection.threshold;
-            // Get numOfTimes
-            const numOfTimes = connection.numOfTimes;
 
             // Create an object to store the connection data
             const connectionData = {
@@ -101,6 +99,7 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
             await redisClient.set(connection.uniqueId, JSON.stringify(connectionData));
 
             // email
+            
         }
     });
 });

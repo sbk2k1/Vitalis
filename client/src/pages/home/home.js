@@ -25,9 +25,14 @@ export default function Home() {
             </Link>
           )}
           {loggedIn && (
-            <Link to="/workspaces">
+            <div style={{height: 10, display: "flex", justifyContent: "center", alignItems: "center"}}>
+            <Link to="/workspaces/api" style={{marginRight: 15}}>
               <button>Workspaces</button>
             </Link>
+            <Link to="/about">
+              <button>About</button>
+            </Link>
+          </div>
           )}
         </nav>
       </header>
