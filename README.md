@@ -53,6 +53,11 @@ docker-compose up -d
 ![Screenshot 1](screenshots/workspace.PNG)
 ![Screenshot 2](screenshots/dashboard.PNG)
 
+## Video
+
+[<img src="https://img.youtube.com/vi/D59FPIxAntc/hqdefault.jpg" 
+/>](https://youtu.be/D59FPIxAntc)
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
