@@ -1,4 +1,4 @@
-# Server Health Monitoring Application
+# Vitalis - A Server Health Monitoring Application
 
 ![App Screenshot](./screenshots/homescreen.PNG)
 
