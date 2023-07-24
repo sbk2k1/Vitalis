@@ -40,6 +40,7 @@ export default function Api(props) {
     getConnections();
 
     const interval = setInterval(() => {
+      if(connections.length > 0)
       populateActive();
     }, 5000);
 

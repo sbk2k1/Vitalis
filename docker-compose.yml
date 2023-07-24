@@ -8,11 +8,23 @@ services:
     volumes:
       - mongodb_data:/data/db
 
+  redis-server:
+    image: redis
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    command: ["redis-server", "--bind", "redis", "--port", "6379"]
+    networks:
+      - my-network
+    ports:
+      - 6379:6379
+
   server:
     build:
       context: ./server
     depends_on:
       - mongodb
+      - redis-server
     expose:
       - ${PORT}
     ports:
@@ -27,7 +39,8 @@ services:
       - PORT=${PORT}
       - MONGO_DB_URL=${MONGO_DB_URL}
       - API_INTERVAL=${API_INTERVAL}
-      - SQL_INTERVAL=${SQL_INTERVAL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
 
   client:
     build:

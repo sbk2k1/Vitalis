@@ -52,5 +52,6 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-scope": "^7.1.1",
     "prettier": "^2.8.4"
-  }
+  },
+  "proxy": "http://server:6969"
 }
