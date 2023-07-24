@@ -1,6 +1,7 @@
 const axios = require('axios');
 const schedule = require('node-schedule');
 const { ConnectionApi } = require('../models/connection');
+const redisClient = require('.redis');
 
 axios.interceptors.request.use(x => {
     // to avoid overwriting if another interceptor
@@ -29,23 +30,26 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
 
             const responseTime = new Date().getTime() - response.config.meta.connectionStartedAt;
 
+            // get the data from redis
+            var data = await redisClient.get(connection.uniqueId);
+        
             if (responseTime > connection.threshold) {
-                connection.status = 'Slow';
+                data.status = 'Slow';
             } else {
-                connection.status = 'Up';
+                data.status = 'Up';
             }
 
             var time;
 
 
             // check if connection.time.split(',').length is equal to 10
-            if (connection.times == undefined) {
+            if (data.times == undefined) {
                 time = responseTime;
             }
             // when there is not , in the times
             else if (connection.times.split(',').length < connection.numOfTimes) {
                 // add error to the end of the array
-                time = connection.times + ',' + responseTime;
+                time = data.times + ',' + responseTime;
             }
             // when there is , in the times
             else {
