@@ -1,5 +1,5 @@
 .about {
-  height: 100vh;
+  height: 100vh !important;
   min-width: 100vw;
   background-image: radial-gradient(circle at 10% 20%,
       rgb(69, 86, 102) 0%,
