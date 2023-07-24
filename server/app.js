@@ -25,13 +25,15 @@ app.use(cors());
 // Database
 require("./services/db");
 
+// redis
+require("./services/redis");
+
 // Middleware
 app.use(express.json());
 app.use(express.static("public"));
 
 // Run schedule
 require("./services/scheduleapi");
-require("./services/schedulesql");
 
 // ------------------ Documentation  ------------------
 
@@ -45,23 +47,19 @@ require("./services/schedulesql");
 // /api/connection - get - get all connections
 // /api/connection - post - create a connection
 
-// sql routes
-// /sql/workspace - get - get all workspaces
-// /sql/workspace - post - create a workspace
-// /sql/workspace/:id - get - get a workspace by id
-
-// /sql/connection - get - get all connections
-// /sql/connection - post - create a connection
-
-// ------------------ API & SQL------------------
+// ------------------ API ------------------
 
 // Routes
 const apiRoutes = require("./routes/apiRoutes");
-const sqlRoutes = require("./routes/sqlRoutes");
 const userRoutes = require("./routes/userRoutes");
 
+app.get("/", (req, res) => {
+  res.json({
+    error: false,
+    message: "Welcome to the official Vitalis API",
+  });
+});
 app.use("/api", apiRoutes);
-app.use("/sql", sqlRoutes);
 app.use("/user", userRoutes);
 
 // ------------------ 404 ------------------

@@ -17,4 +17,4 @@ const WorkspaceApiSchema = new mongoose.Schema({
 
 // Export both API and SQL workspace models
 
-module.exports = WorkspaceApi: mongoose.model('WorkspaceApi', WorkspaceApiSchema);
+module.exports = mongoose.model('WorkspaceApi', WorkspaceApiSchema);

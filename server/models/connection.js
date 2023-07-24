@@ -4,6 +4,11 @@ const mongoose = require('mongoose');
 
 const ConnectionApiSchema = new mongoose.Schema({
     // API connection fields
+    uniqueId: {
+        type: String,
+        required: true,
+        unique: true,
+    },
     url: {
         type: String,
         required: true,
@@ -33,4 +38,4 @@ const ConnectionApiSchema = new mongoose.Schema({
 
 // Export both API and SQL connection models
 
-module.exports = ConnectionApi: mongoose.model('ConnectionApi', ConnectionApiSchema);
+module.exports = mongoose.model('ConnectionApi', ConnectionApiSchema);

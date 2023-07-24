@@ -17,7 +17,11 @@
     "mssql": "^9.1.1",
     "mysql": "^2.18.1",
     "node-schedule": "^2.1.1",
-    "nodemon": "^2.0.22"
+    "redis": "^4.6.7",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
   },
   "scripts": {
     "start": "node app.js",

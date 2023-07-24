@@ -1,5 +1,5 @@
-const WorkspaceApi = require('../models/workspace');
-const ConnectionApi = require('../models/connection');
+const WorkspaceApi = require('../../models/workspace');
+const ConnectionApi = require('../../models/connection');
 const { mongoose } = require('mongoose');
 
 // services

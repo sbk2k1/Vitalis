@@ -23,6 +23,7 @@ router.delete('/workspaces/:name', auth,  apiControllers.deleteWorkspace);
 
 // connection routes
 router.get('/connections/:workspace', auth,  apiControllers.getConnections);
+router.get('/connections/populate/:name', apiControllers.populateConnection)
 router.post('/connections/:workspace', auth,  apiControllers.createConnection);
 router.delete('/connections/:workspace', auth,  apiControllers.deleteConnection);
 

@@ -2,6 +2,8 @@ const { WorkspaceApi } = require('../models/workspace');
 const { ConnectionApi } = require('../models/connection');
 const { mongoose } = require('mongoose');
 const apiServices = require('../services/db/api');
+const uuid = require('uuid');
+const redisClient = require('../services/redis');
 
 // Add API Controllers here
 
@@ -36,6 +38,7 @@ const getWorkspaces = async (req, res) => {
 
 const getWorkspaceByName = async (req, res) => {
     try {
+
         const workspace = await apiServices.getApiWorkspacesService({ name: req.params.name, user: req.user.username });
 
         // if length is 0, workspace does not exist
@@ -112,12 +115,55 @@ const getConnections = async (req, res) => {
     }
 };
 
+// function to populate connection - service needed = populateApiConnectionService
+
+const populateConnection = async (req, res) => {
+    try {
+        // get uniqueId from params
+        const uniqueId = req.params.name;
+        // get data from redis 
+        const data = await redisClient.get(uniqueId);
+        // if data is null, connection does not exist
+        if (!data) {
+            return res.status(400).json({
+                error: true,
+                message: "Connection does not exist"
+            });
+        }
+        // parse data
+        const parsedData = JSON.parse(data);
+        // return data
+        res.status(200).json({
+            error: false,
+            data: parsedData
+        });
+    } catch (err) {
+        res.status(500).json({
+            error: true,
+            message: err.message
+        });
+    }
+}
+
+
+
+
 // function createConnection(workspace, url, method, threshold, numOfTimes) - service needed = createApiConnectionService
 
 const createConnection = async (req, res) => {
     try {
         // take care of %20 in workspace name
-        var params = { workspace: req.params.workspace, connection: req.body, user: req.user.username };
+
+        // create unique id
+
+        const uniqueId = uuid.v4();
+
+        var params = { 
+            workspace: req.params.workspace, 
+            uniqueId: uniqueId,
+            connection: req.body, 
+            user: req.user.username 
+        };
         const connection = await apiServices.createApiConnectionService(params);
 
         if (!connection.created) {
@@ -203,5 +249,6 @@ module.exports = {
     getConnections,
     createConnection,
     deleteConnection,
-    deleteWorkspace
+    deleteWorkspace,
+    populateConnection
 }
