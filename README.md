@@ -1,6 +1,6 @@
 # Server Health Monitoring Application
 
-![App Screenshot](screenshots/homescreen.png)
+![App Screenshot](./screenshots/homescreen.PNG)
 
 ## About
 
@@ -50,8 +50,8 @@ docker-compose up -d
 
 ## Screenshots
 
-![Screenshot 1](screenshots/workspace.png)
-![Screenshot 2](screenshots/dashboard.png)
+![Screenshot 1](screenshots/workspace.PNG)
+![Screenshot 2](screenshots/dashboard.PNG)
 
 ## License
 
