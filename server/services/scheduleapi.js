@@ -1,25 +1,19 @@
 const axios = require('axios');
 const schedule = require('node-schedule');
-const { ConnectionApi } = require('../models/connection');
-const redisClient = require('.redis');
+const ConnectionApi  = require('../models/connection');
+const redisClient = require('./redis'); // Make sure to provide the correct path to the redis.js file
 
 axios.interceptors.request.use(x => {
-    // to avoid overwriting if another interceptor
-    // already defined the same object (meta)
-    x.meta = x.meta || {}
+    x.meta = x.meta || {};
     x.meta.connectionStartedAt = new Date().getTime();
     return x;
-})
+});
 
 // check uptime every 5 minutes
-// therefore the string should be '5 * * * * *'
-// for 10 minutes the string should be '10 * * * * *'
-
 schedule.scheduleJob(process.env.API_INTERVAL, async () => {
-
-    // send connection to each connection
-
     const connections = await ConnectionApi.find({});
+
+    console.log(`Checking ${connections.length} connections`);
 
     connections.forEach(async connection => {
         try {
@@ -28,78 +22,85 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
                 url: connection.url,
             });
 
+            // Get response time
             const responseTime = new Date().getTime() - response.config.meta.connectionStartedAt;
 
-            // get the data from redis
-            var data = await redisClient.get(connection.uniqueId);
-        
-            if (responseTime > connection.threshold) {
-                data.status = 'Slow';
+            // Get connection threshold
+            const threshold = connection.threshold;
+            // Get numOfTimes
+            const numOfTimes = connection.numOfTimes;
+
+            // Create an object to store the connection data
+            const connectionData = {
+                responseTimes: [], // To keep track of last numOfTimes response times
+                status: '', // To store the status (slow, up, down)
+                statusCode: response.status, // To store the current status code
+                responseSize: response.headers['content-length'], // To store the response size
+                lastCheckedTime: new Date().getTime(), // To store the last checked time
+            };
+
+            // Fetch the existing data from Redis
+            const existingData = await redisClient.get(connection.uniqueId);
+            if (existingData) {
+                // If there is existing data, parse it from JSON and update the responseTimes array
+                const parsedData = JSON.parse(existingData);
+                connectionData.responseTimes = parsedData.responseTimes;
+            }
+
+            // Add the current response time to the responseTimes array
+            connectionData.responseTimes.push(responseTime);
+
+            // If the number of response times exceeds numOfTimes, remove the oldest time
+            if (connectionData.responseTimes.length > numOfTimes) {
+                connectionData.responseTimes.shift();
+            }
+
+            // Check if the current response time is less than the threshold
+            if (responseTime < threshold) {
+                connectionData.status = 'slow';
             } else {
-                data.status = 'Up';
+                // Set the status as 'up' or 'down' based on your conditions
+                // For example, you can check response status code and determine the status
+                connectionData.status = 'up';
             }
 
-            var time;
-
-
-            // check if connection.time.split(',').length is equal to 10
-            if (data.times == undefined) {
-                time = responseTime;
-            }
-            // when there is not , in the times
-            else if (connection.times.split(',').length < connection.numOfTimes) {
-                // add error to the end of the array
-                time = data.times + ',' + responseTime;
-            }
-            // when there is , in the times
-            else {
-                // if equal to 10, remove the first element of the array and add the new response time to the end of the array
-                const times = connection.times.split(',');
-                times.shift();
-                times.push(responseTime);
-                time = times.join(',');
-            }
-
-            connection.times = time;
-
-            connection.statusCode = response.status;
-            connection.responseSize = (response.data == undefined) ? 0 : response.data.length;
-            connection.lastChecked = new Date().toISOString();
-
-            await connection.save();
-
+            // Update the Redis data with the new connection data
+            await redisClient.set(connection.uniqueId, JSON.stringify(connectionData));
         } catch (error) {
-            console.log(error.message);
-            connection.status = 'Down';
-            var time;
-            if (connection.times == undefined) {
-                time = "error";
-            }
-            // when there is not , in the times
-            else if (connection.times.split(',').length < connection.numOfTimes) {
-                // add error to the end of the array
-                // console.log(connection.times);
-                time = connection.times + ',' + "error";
-                // console.log(time);
-            }
-            // when there is , in the times
-            else {
-                // if equal to 10, remove the first element of the array and add the new response time to the end of the array
-                const times = connection.times.split(',');
-                times.shift();
-                times.push("error");
-                time = times.join(',');
+            console.error(`Error checking connection ${connection.url}: ${error.message}`);
+
+            // Create an object to store the connection data
+            const connectionData = {
+                responseTimes: [], // To keep track of last numOfTimes response times
+                status: 'down', // To store the status (slow, up, down)
+                statusCode: error.response ? error.response.status : '', // To store the current status code
+                responseSize: error.response ? error.response.headers['content-length'] : '', // To store the response size
+                lastCheckedTime: new Date().getTime(), // To store the last checked time
+            };
+
+            // Fetch the existing data from Redis
+            const existingData = await redisClient.get(connection.uniqueId);
+            if (existingData) {
+                // If there is existing data, parse it from JSON and update the responseTimes array
+                const parsedData = JSON.parse(existingData);
+                connectionData.responseTimes = parsedData.responseTimes;
             }
 
-            // console.log(time);
-            connection.times = time;
+            // add current response time as 0
+            connectionData.responseTimes.push(0);
 
-            connection.statusCode = "Error";
-            connection.responseSize = "Error";
-            connection.lastChecked = new Date().toISOString();
+            // If the number of response times exceeds numOfTimes, remove the oldest time
+            if (connectionData.responseTimes.length > numOfTimes) {
+                connectionData.responseTimes.shift();
+            }
 
-            await connection.save();
+            // update status as down
+            connectionData.status = 'down';
+
+            // Update the Redis data with the new connection data
+            await redisClient.set(connection.uniqueId, JSON.stringify(connectionData));
+
+            // email
         }
     });
 });
-
