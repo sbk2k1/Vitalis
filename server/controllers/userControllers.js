@@ -14,6 +14,7 @@ const register = async (req, res) => {
             name: req.body.name,
             username: req.body.username,
             password: hash_password,
+            email : req.body.email
         };
 
         const newUser = await userServices.createUserService(user);
@@ -71,6 +72,7 @@ const login = async (req, res) => {
             _id: login.user._id,
             name: login.user.name,
             username: login.user.username,
+            email: login.user.email
         });
         return res.status(200).json({
             error: false,
