@@ -73,7 +73,7 @@ const createApiConnectionService = async (params) => {
     try {
         // first get workspace from params
 
-        const workspace = await WorkspaceApi.findOne({name: params.workspace, user: params.user});
+        const workspace = await WorkspaceApi.findOne({ name: params.workspace, user: params.user });
 
         // if workspace does not exist, return error
 
@@ -114,7 +114,7 @@ const createApiConnectionService = async (params) => {
 const deleteApiConnectionService = async (params) => {
     try {
         // first get workspace from params
-        const workspace = await WorkspaceApi.findOne({name: params.workspace, user: params.user});
+        const workspace = await WorkspaceApi.findOne({ name: params.workspace, user: params.user });
         // if workspace does not exist, return error
         if (!workspace) {
             return {
@@ -124,9 +124,9 @@ const deleteApiConnectionService = async (params) => {
         }
         // check if connection exists
         const connection = await ConnectionApi.findOne({
-            workspace: new mongoose.Types.ObjectId(workspace._id), 
-            url: params.url, requestType: 
-            params.requestType
+            workspace: new mongoose.Types.ObjectId(workspace._id),
+            url: params.url, requestType:
+                params.requestType
         });
         // if connection does not exist, return error
         if (!connection) {
@@ -152,9 +152,10 @@ const deleteApiConnectionService = async (params) => {
 const deleteApiWorkspaceService = async (params) => {
     try {
         // first get workspace from params
-        const workspace = await WorkspaceApi.findOne({name: params.workspace, user: params.user});
+        const workspace = await WorkspaceApi.findOne({ name: params.workspace, user: params.user });
         // get connections related to workspace
-        const connections = await ConnectionApi.find({workspace: workspace._id});
+        const connections = await ConnectionApi.find({ workspace: workspace._id });
+        console.log(connections);
         // if connections exist return not deleted
         if (connections.length > 0) {
             return {

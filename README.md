@@ -11,11 +11,14 @@ The Server Health Monitoring Application is a full-stack application built using
 ```
 server-health-monitoring/
 |-- client/ # React frontend (Client)
+|-- screenshots/ # Screenshots of the application
 |-- server/ # Node.js backend (Server)
-|-- redis/ # Redis server configuration
-|-- mongodb/ # MongoDB server configuration
-|-- docker-compose.yml
+|-- .env.example/ # Example environment variables
+|-- .gitignore
+|-- docker-compose.yml/ # Docker Compose configuration file
+|-- LICENSE
 |-- README.md
+|-- remote-server.example.yml/ # Example docker compose configuration file for remote servers
 ```
 
 ## Requirements
@@ -39,14 +42,19 @@ git clone https://github.com/your-username/server-health-monitoring.git
 cd server-health-monitoring
 ```
 
-2. Build the Docker images and start the containers:
+2. Create a `.env` file in the root directory and add the environment variables as shown in the `.env.example` file.
+
+3. Build the Docker images and start the containers:
 
 ```
 docker-compose up -d
 ```
 
-3. The application will be available at:
+4. The application will be available at:
+
    - Frontend (React) - http://localhost:1234
+
+5. In case of a remote server, you will need to install Docker and Docker Compose on the remote server, you need to pull custom images from Docker Hub, and you need to run the containers using the `docker-compose.yml` file. You can use the `remote-server.example.yml` file as a reference.
 
 ## Screenshots
 

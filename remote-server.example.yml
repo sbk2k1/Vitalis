@@ -1,0 +1,66 @@
+version: "3"
+services:
+  mongodb:
+    image: mongo
+    restart: always
+    networks:
+      - my-network
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:latest
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - my-network
+    ports:
+      - 6379:6379
+
+  server:
+    image: sbk2k1/vitalis-server:1.0.0
+    depends_on:
+      - mongodb
+      - redis
+    links:
+      - redis
+    expose:
+      - ${PORT}
+    ports:
+      - 9876:${PORT}
+    networks:
+      - my-network
+    volumes:
+      - ./server/config/mongodb-url.txt:/app/config/mongodb-url.txt:ro
+    environment:
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=${PORT}
+      - MONGO_DB_URL=${MONGO_DB_URL}
+      - API_INTERVAL=${API_INTERVAL}
+      - REDIS_URL=${REDIS_URL}
+      - SENDINBLUE_API_KEY=${SENDINBLUE_API_KEY}
+      - SENDINBLUE_SENDER_EMAIL=${SENDINBLUE_SENDER_EMAIL}
+
+  client:
+    image: sbk2k1/vitalis-client:1.0.0
+    depends_on:
+      - server
+    ports:
+      - 1234:3000
+    expose:
+      - 3000
+    links:
+      - server
+    networks:
+      - my-network
+    environment:
+      - REACT_APP_ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+
+networks:
+  my-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
