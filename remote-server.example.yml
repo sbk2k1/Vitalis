@@ -19,7 +19,7 @@ services:
       - 6379:6379
 
   server:
-    image: sbk2k1/vitalis-server:1.0.0
+    image: sbk2k1/vitalis-server:1.1.0
     depends_on:
       - mongodb
       - redis
