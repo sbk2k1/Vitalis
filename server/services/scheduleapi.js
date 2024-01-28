@@ -4,24 +4,9 @@ const ConnectionApi = require('../models/connection');
 const redisClient = require('./redis'); // Make sure to provide the correct path to the redis.js file
 const User = require('../models/user');
 const Workspace = require('../models/workspace');
-// const SibApiV3Sdk = require('sib-api-v3-sdk');
+const Resend = require('resend');
 
-// let defaultClient = SibApiV3Sdk.ApiClient.instance;
-
-// // Configure API key authorization: api-key
-// let apiKey = defaultClient.authentications['api-key'];
-// apiKey.apiKey = process.env.SENDINBLUE_API_KEY;
-
-// let apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-// // create reusable transporter object using the default SMTP transport
-// let transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//         user: process.env.EMAIL_USERNAME,
-//         pass: process.env.EMAIL_PASSWORD
-//     }
-// });
+const resend = new Resend.Resend(process.env.RESEND_API_KEY);
 
 axios.interceptors.request.use(x => {
     x.meta = x.meta || {};
@@ -85,8 +70,6 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
             // Update the Redis data with the new connection data
             await redisClient.set(connection.uniqueId, JSON.stringify(connectionData));
         } catch (error) {
-            console.error(`Error checking connection ${connection.url}: ${error.message}`);
-
             // Create an object to store the connection data
             const connectionData = {
                 responseTimes: [], // To keep track of last numOfTimes response times
@@ -101,7 +84,71 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
             if (existingData) {
                 // If there is existing data, parse it from JSON and update the responseTimes array
                 const parsedData = JSON.parse(existingData);
+
+                // if recent (last) data of past data from redis is down, send email
+                if (parsedData.responseTimes[parsedData.responseTimes.length - 1] !== 0) {
+
+                    // get user
+                    const workspace = await Workspace.findOne({ _id: connection.workspace });
+                    const user = await User.findOne({ username: workspace.user });
+                    const email = user.email;
+
+                    let mailOptions = {
+                        from: process.env.VITALIS_EMAIL,
+                        to: email,
+                        subject: `Connection Down for ${connection.url} in workspace ${workspace.name}`,
+                        text: `Please find the details below:
+                        Connection URL: ${connection.url}
+                        Connection Type: ${connection.connectionType}
+                        Connection Threshold: ${connection.threshold}
+                        Connection Status: ${connectionData.status}
+                        Connection Status Code: ${connectionData.statusCode}
+                        Connection Response Size: ${connectionData.responseSize}
+                        Connection Last Checked Time: ${connectionData.lastCheckedTime}
+                        `,
+                    };
+
+
+                    resend.emails.send(mailOptions).then((response) => {
+                        console.log(response)
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+                }
+
+
                 connectionData.responseTimes = parsedData.responseTimes;
+            }
+
+            // if no data in redis, send email
+            if (!existingData) {
+
+                // get user
+                const workspace = await Workspace.findOne({ _id: connection.workspace });
+                const user = await User.findOne({ username: workspace.user });
+                const email = user.email;
+
+                let mailOptions = {
+                    from: process.env.VITALIS_EMAIL,
+                    to: email,
+                    subject: `Connection Down for ${connection.url} in workspace ${workspace.name}`,
+                    text: `Please find the details below:
+                        Connection URL: ${connection.url}
+                        Connection Type: ${connection.connectionType}
+                        Connection Threshold: ${connection.threshold}
+                        Connection Status: ${connectionData.status}
+                        Connection Status Code: ${connectionData.statusCode}
+                        Connection Response Size: ${connectionData.responseSize}
+                        Connection Last Checked Time: ${connectionData.lastCheckedTime}
+                        `,
+                };
+
+
+                resend.emails.send(mailOptions).then((response) => {
+                    console.log(response)
+                }).catch((err) => {
+                    console.log(err)
+                })
             }
 
             // add current response time as 0
@@ -112,46 +159,9 @@ schedule.scheduleJob(process.env.API_INTERVAL, async () => {
                 connectionData.responseTimes.shift();
             }
 
-            // update status as down
-            connectionData.status = 'down';
 
             // Update the Redis data with the new connection data
             await redisClient.set(connection.uniqueId, JSON.stringify(connectionData));
-
-            // try {
-            //     // email
-            //     const workspace = await Workspace.findOne({ _id: connection.workspace });
-            //     const user = await User.findOne({ username: workspace.user });
-            //     const email = user.email;
-
-            //     // send email
-
-            //     let mailOptions = {
-            //         from: process.env.EMAIL_USERNAME,
-            //         to: email,
-            //         subject: `Connection Down for ${connection.url} in workspace ${workspace.name}`,
-            //         text: `Please find the details below:
-            //     Connection URL: ${connection.url}
-            //     Connection Type: ${connection.connectionType}
-            //     Connection Threshold: ${connection.threshold}
-            //     Connection Status: ${connectionData.status}
-            //     Connection Status Code: ${connectionData.statusCode}
-            //     Connection Response Size: ${connectionData.responseSize}
-            //     Connection Last Checked Time: ${connectionData.lastCheckedTime}
-            //     `,
-            //     };
-
-            //     transporter.sendMail(mailOptions, function (err, data) {
-            //         if (err) {
-            //             console.log('Error Occurs', err);
-            //         } else {
-            //             console.log('Email sent!!!');
-            //         }
-            //     }
-            //     );
-            // } catch (err) {
-            //     console.log(err);
-            // }
         }
     });
 });

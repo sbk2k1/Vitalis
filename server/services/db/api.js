@@ -2,6 +2,8 @@ const WorkspaceApi = require('../../models/workspace');
 const ConnectionApi = require('../../models/connection');
 const { mongoose } = require('mongoose');
 const uuid = require('uuid');
+const redisClient = require('../redis');
+
 
 // services
 
@@ -137,6 +139,10 @@ const deleteApiConnectionService = async (params) => {
         }
         // if connection exists, delete connection
         await connection.deleteOne();
+
+        // remove data from redis
+        await redisClient.del(connection.uniqueId);
+
         return {
             deleted: true,
             connection

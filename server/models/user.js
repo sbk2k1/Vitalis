@@ -14,7 +14,7 @@ var UserSchema = new Schema({
     },
     email: {
         type: String,
-        default: 'mailofficialvortex@gmail.com',
+        default: 'bhattacharyasaptarshi2001@gmail.com',
     },
     password: String
 });
